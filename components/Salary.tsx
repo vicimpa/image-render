@@ -7,7 +7,7 @@ export interface ISalaryProps {
 
 export const Salary: FC<ISalaryProps> = ({
   amount = '',
-  currency
+  currency = ''
 }) => {
   const num = +amount;
 
@@ -61,7 +61,7 @@ export const Salary: FC<ISalaryProps> = ({
         letterSpacing: '-28.094px',
         whiteSpace: 'nowrap'
       }}>
-      {`${currency}${amount}`}
+      {`${currency}${num}`}
     </span>
   );
 
@@ -78,7 +78,7 @@ export const Salary: FC<ISalaryProps> = ({
         letterSpacing: '-24.148px',
         whiteSpace: 'nowrap'
       }}>
-      {`${currency}${amount}`}
+      {`${currency}${num}`}
     </span>
   );
 };

@@ -79,6 +79,7 @@ const server = async (
 Bun.serve({
   async fetch(request) {
     const { url } = request;
+    const [murl, params] = queryParse(url);
     const res = { status: 200 };
     const time = performance.now();
     try {
@@ -91,9 +92,10 @@ Bun.serve({
       return new Response(result, { ...res, headers });
     } catch (e) {
       res.status = 500;
+      console.error(e);
       return new Response(`${e}`, res);
     } finally {
-      console.log(`${new Date().toISOString()} ${performance.now() - time}ms ${res.status} ${url}`);
+      console.log(((performance.now() - time) | 0) + 'ms', new Date().toISOString(), res.status, murl, params);
     }
   },
   port: 3001
