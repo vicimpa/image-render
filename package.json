@@ -1,0 +1,17 @@
+{
+  "name": "ptch-jobs-image",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/react": "^18.2.31",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.0",
+    "react": "^18.2.0",
+    "satori": "^0.10.9"
+  }
+}
