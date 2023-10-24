@@ -1,7 +1,18 @@
 import { Resvg } from "@resvg/resvg-js";
 
-export function svgToBuffer(svg: string) {
-  const resvg = new Resvg(svg);
-  const pngData = resvg.render();
-  return pngData.asPng();
+export function svgToBuffer(svg: string, width?: number) {
+  return new Resvg(svg, (
+    width ?
+      {
+        fitTo: {
+          mode: "width",
+          value: width,
+        },
+      }
+      : {
+        fitTo: {
+          mode: "original",
+        },
+      }
+  )).render().asPng();
 }
