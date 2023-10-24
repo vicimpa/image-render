@@ -4,6 +4,7 @@
   "type": "module",
   "devDependencies": {
     "@types/react": "^18.2.31",
+    "@types/react-dom": "^18.2.14",
     "bun-types": "latest"
   },
   "peerDependencies": {
@@ -12,6 +13,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.0",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "satori": "^0.10.9"
   }
 }

@@ -50,14 +50,14 @@ const server = async (
 
     case '': {
       const {
-        title = 'Lorem ipsum',
-        location = 'Нарния',
-        amount = '',
-        currency = ''
+        title,
+        location,
+        amount,
+        currency
       } = params;
 
       svg = await reactToSvg(
-        <Job {...{ title, location }} salary={{ amount: +amount, currency }} />
+        <Job {...{ title, location }} salary={{ amount, currency }} />
       );
 
       break;

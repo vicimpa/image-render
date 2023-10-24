@@ -5,14 +5,14 @@ import { PB } from "./PB";
 import { ISalaryProps, Salary } from "./Salary";
 
 export interface IJobProps {
-  title: string;
-  location: string;
-  salary: ISalaryProps;
+  title?: string;
+  location?: string;
+  salary?: ISalaryProps;
 }
 
 export const Job: FC<IJobProps> = ({
-  title,
-  location,
+  title = 'Lorem ipsum',
+  location = 'Нарния',
   salary,
 }) => (
   <div

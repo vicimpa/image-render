@@ -1,15 +1,17 @@
 import { FC } from "react";
 
 export interface ISalaryProps {
-  amount: number;
-  currency: string;
+  amount?: string;
+  currency?: string;
 }
 
 export const Salary: FC<ISalaryProps> = ({
-  amount,
+  amount = '',
   currency
 }) => {
-  if (isNaN(amount) || amount <= 0) return (
+  const num = +amount;
+
+  if (isNaN(num) || num <= 0) return (
     <span
       style={{
         position: 'absolute',
@@ -42,11 +44,11 @@ export const Salary: FC<ISalaryProps> = ({
         letterSpacing: '-35.333px',
         whiteSpace: 'nowrap'
       }}>
-      {`${~~(amount / 1000)}K`}
+      {`${~~(num / 1000)}K`}
     </span>
   );
 
-  if (amount <= 9999) return (
+  if (num <= 9999) return (
     <span
       style={{
         position: 'absolute',
