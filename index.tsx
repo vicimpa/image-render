@@ -84,7 +84,11 @@ Bun.serve({
     try {
       const result = await server(parse(url).path, res);
       console.log(`Run ${performance.now() - time}ms ${url}`);
-      return new Response(result, res);
+      return new Response(result, {
+        ...res, headers: {
+          'Content-Type': result instanceof Buffer ? 'image/png' : 'text/plain'
+        }
+      });
     } catch (e) {
       return new Response(`${e}`, { status: 500 });
     } finally {
