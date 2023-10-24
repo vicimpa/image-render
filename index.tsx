@@ -48,7 +48,7 @@ const server = async (
       break;
     }
 
-    default: {
+    case '': {
       const {
         title = 'Lorem ipsum',
         location = 'Нарния',
@@ -90,9 +90,10 @@ Bun.serve({
       };
       return new Response(result, { ...res, headers });
     } catch (e) {
-      return new Response(`${e}`, { status: 500 });
+      res.status = 500;
+      return new Response(`${e}`, res);
     } finally {
-      console.log(`Run ${performance.now() - time}ms ${url}`);
+      console.log(`${new Date().toISOString()} ${performance.now() - time}ms ${res.status} ${url}`);
     }
   },
   port: 3001
