@@ -11,6 +11,7 @@ interface IParameters {
   name?: string;
   style?: string;
 
+  url?: string;
   width?: string;
 
   title?: string;
@@ -24,7 +25,7 @@ const server = async (
   res: { status: number; }
 ): Promise<null | string | Buffer> => {
   const [url, params] = queryParse<IParameters>(path ?? '');
-  let [method, append] = getMethod(url);
+  let [method] = getMethod(url);
   let svg: undefined | string = '';
   let outWidth: number | undefined;
 
@@ -33,7 +34,7 @@ const server = async (
       const { name, style } = params;
       if (!name) {
         res.status = 400;
-        return 'Need name parameter!';
+        return `Need 'name' parameter!`;
       }
 
       svg = await nameToSvg(name, style as any);
@@ -42,8 +43,13 @@ const server = async (
     }
 
     case 'svg': {
-      const { width } = params;
-      svg = await fetch(append).then(e => e.text());
+      const { width, url = '' } = params;
+      if (!url) {
+        res.status = 400;
+        return `Need 'url' parameter!`;
+      }
+
+      svg = await fetch(url).then(e => e.text());
       if (width && !isNaN(+width)) outWidth = +width;
       break;
     }
