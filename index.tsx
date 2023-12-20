@@ -1,108 +1,110 @@
-import { parse } from "url";
+import express, { NextFunction, Request, Response } from "express";
+import { parse, ValiError } from "valibot";
 
 import { Job } from "./components/Job";
-import { getMethod } from "./library/getMethod";
 import { nameToSvg } from "./library/nameToSvg";
-import { queryParse } from "./library/queryParse";
 import { reactToSvg } from "./library/reactToSvg";
+import { SVG } from "./library/SVG";
 import { svgToBuffer } from "./library/svgToBuffer";
+import { AvatarParams } from "./models/AvatarParams";
+import { BaseParams } from "./models/BaseParams";
+import { SvgParams } from "./models/SvgParams";
 
-interface IParameters {
-  name?: string;
-  style?: string;
+const app = express();
 
-  url?: string;
-  width?: string;
+app.disabled('x-powered-by');
 
-  title?: string;
-  location?: string;
-  amount?: string;
-  currency?: string;
-}
-
-const server = async (
-  path: string | null,
-  res: { status: number; }
-): Promise<null | string | Buffer> => {
-  const [url, params] = queryParse<IParameters>(path ?? '');
-  let [method] = getMethod(url);
-  let svg: undefined | string = '';
-  let outWidth: number | undefined;
-
-  switch (method) {
-    case 'avatar': {
-      const { name, style } = params;
-      if (!name) {
-        res.status = 400;
-        return `Need 'name' parameter!`;
-      }
-
-      svg = await nameToSvg(name, style as any);
-      outWidth = 120;
-      break;
-    }
-
-    case 'svg': {
-      const { width, url = '' } = params;
-      if (!url) {
-        res.status = 400;
-        return `Need 'url' parameter!`;
-      }
-
-      svg = await fetch(url).then(e => e.text());
-      if (width && !isNaN(+width)) outWidth = +width;
-      break;
-    }
-
-    case '': {
-      const {
-        title,
-        location,
-        amount,
-        currency
-      } = params;
-
-      svg = await reactToSvg(
-        <Job {...{ title, location }} salary={{ amount, currency }} />
-      );
-
-      break;
-    }
-  }
-
-  if (!svg) {
-    res.status = 404;
-    return 'Not found';
-  }
-
-  try {
-    return svgToBuffer(svg, outWidth);
-  } finally {
+app.use((req, res, next) => {
+  res.once('close', () => {
     Bun.gc(true);
-  }
-};
+  });
 
-Bun.serve({
-  async fetch(request) {
-    const { url } = request;
-    const [murl, params] = queryParse(url);
-    const res = { status: 200 };
-    const time = performance.now();
-    try {
-      const result = await server(parse(url).path, res);
-      const headers = {
-        'Content-Type': (
-          result instanceof Buffer ? 'image/png' : 'text/plain'
-        )
-      };
-      return new Response(result, { ...res, headers });
-    } catch (e) {
-      res.status = 500;
-      console.error(e);
-      return new Response(`${e}`, res);
-    } finally {
-      console.log(((performance.now() - time) | 0) + 'ms', new Date().toISOString(), res.status, murl, params);
-    }
-  },
-  port: 3001
+  next();
 });
+
+app.get('/', (req, res, next) => {
+  const {
+    title,
+    location,
+    amount,
+    currency
+  } = parse(BaseParams, req.query);
+
+  const render = (
+    <Job {...{ title, location }} salary={{ amount, currency }} />
+  );
+
+  reactToSvg(render)
+    .then(svg => next(new SVG(svg)))
+    .catch(next);
+});
+
+app.get('/avatar', (req, res, next) => {
+  const { name, style } = parse(AvatarParams, req.query);
+
+  nameToSvg(name, style)
+    .then(svg => next(new SVG(svg)))
+    .catch(next);
+});
+
+app.get('/svg', (req, res, next) => {
+  const { url, width } = parse(SvgParams, req.query);
+  let outWidth: number | undefined = undefined;
+  if (width && !isNaN(+width)) outWidth = +width;
+
+  fetch(url)
+    .then(r => r.text())
+    .then(svg => next(new SVG(svg, outWidth)))
+    .catch(next);
+});
+
+app.use(
+  (err: any, req: Request, res: Response, next: NextFunction) => {
+    if (!(err instanceof SVG)) {
+      return next(err);
+    }
+
+    next(svgToBuffer(err.svg, err.outWidth));
+  }
+);
+
+app.use(
+  (err: any, req: Request, res: Response, next: NextFunction) => {
+    if (!(err instanceof Buffer)) {
+      return next(err);
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'image/png');
+    res.send(err);
+  }
+);
+
+app.use(
+  (err: any, req: Request, res: Response, next: NextFunction) => {
+    if (!(err instanceof ValiError)) {
+      return next(err);
+    }
+
+    res.statusCode = 400;
+
+    res.send({
+      code: res.statusCode,
+      message: err.message,
+      reson: err.issues
+    });
+  }
+);
+
+app.use(
+  (err: any, req: Request, res: Response, next: NextFunction) => {
+    res.statusCode = 'code' in err ? err.code : 500;
+
+    res.send({
+      code: res.statusCode,
+      message: 'message' in err ? err.message : `${err}`
+    });
+  }
+);
+
+app.listen(3001);
